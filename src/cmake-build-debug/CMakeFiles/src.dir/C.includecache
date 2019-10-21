@@ -1,0 +1,34 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/cygdrive/c/Users/Admin/Documents/src/main.c
+unistd.h
+-
+ctype.h
+-
+stdlib.h
+-
+stdio.h
+-
+packet_implement.h
+/cygdrive/c/Users/Admin/Documents/src/packet_implement.h
+receive.h
+/cygdrive/c/Users/Admin/Documents/src/receive.h
+
+/cygdrive/c/Users/Admin/Documents/src/packet_implement.h
+stddef.h
+-
+stdint.h
+-
+stdio.h
+-
+
+/cygdrive/c/Users/Admin/Documents/src/receive.h
+
+/cygdrive/c/Users/Admin/Documents/src/server.c
+
