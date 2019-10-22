@@ -24,7 +24,7 @@
 char *buffer_payload[MAX_PAYLOAD_SIZE]; //Permet de stocker les payload recu
 int buffer_len[MAX_WINDOW_SIZE]; //Permet de stocker la taille des payload recu
 
-void receive_data(char* hostname, int port, int N){
+void receive_data(char* hostname, int port, int N, char* format){
 
     struct sockaddr_in6 addr;
     memset(&addr, 0, sizeof(addr));
@@ -83,7 +83,15 @@ void receive_data(char* hostname, int port, int N){
         return;
     }
 
-
+    //ouverture du fichier de sortie
+	char file[sizeof(format)];
+ 	sprintf(file,format,0);
+	int fd = open((const char *)file, O_WRONLY | O_CREAT | O_TRUNC , S_IRWXU);
+	if(fd == -1){
+		fprintf(stderr, "An occur failed while opening fd.");
+		return;
+	}
+    
     fd_set readset;
 
     FD_ZERO(&readset);
@@ -139,7 +147,7 @@ void receive_data(char* hostname, int port, int N){
                             //a bien été reçu
                             while (buffer_len[index] != -1){
                                 //Ecriture le pyaload des packets dans le fichier
-                                if(write(&readset,buffer_payload[index],buffer_len[index]) < 0)
+                                if(write(&fd,buffer_payload[index],buffer_len[index]) < 0)
                                 {
                                     fprintf(stderr,"ERROR WRITING PACKET");
                                 }
