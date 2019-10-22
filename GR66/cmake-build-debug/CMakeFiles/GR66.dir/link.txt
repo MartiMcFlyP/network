@@ -1,0 +1,1 @@
+/usr/bin/cc -g  -Wl,--enable-auto-import CMakeFiles/GR66.dir/main.c.o CMakeFiles/GR66.dir/socket.c.o CMakeFiles/GR66.dir/receive.c.o CMakeFiles/GR66.dir/packet_interface.c.o  -o GR66.exe -Wl,--out-implib,libGR66.dll.a -Wl,--major-image-version,0,--minor-image-version,0 
