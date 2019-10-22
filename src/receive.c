@@ -18,6 +18,8 @@
 #include <errno.h>
 
 
+/* !!! Attention, ce code est grandement inspiré d'un code trouvé sur internet !!! */
+
 char *buffer_payload[MAX_PAYLOAD_SIZE]; //Permet de stocker les payload recu
 int buffer_len[MAX_WINDOW_SIZE]; //Permet de stocker la taille des payload recu
 
