@@ -39,6 +39,6 @@ int main(int argc, char **argv) {
     }
     hostname = argv[optind];
     port = atoi(argv[optind+1]);
-    receive(hostname,port,fichier);
+    receive(hostname,port,N);
     exit(EXIT_SUCCESS);
 }
