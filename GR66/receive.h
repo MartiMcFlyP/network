@@ -26,7 +26,7 @@
 char *buffer_payload[MAX_PAYLOAD_SIZE]; //Permet de stocker les payload recu
 int buffer_len[MAX_WINDOW_SIZE]; //Permet de stocker la taille des payload recu
 
-void receive_data(char* hostname, int port, int N);
+void receive_data(char* hostname, int port, int N, char* format);
 
 void add_buffer(int index, int seq_rcv, int seq_exp, pkt_t * pkt_rcv, int window);
 
