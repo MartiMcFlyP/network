@@ -1,6 +1,3 @@
-//
-// Created by Admin on 21-10-19.
-//
 #include "socket.h"
 #include <stdio.h>
 #include <stdlib.h>

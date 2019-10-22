@@ -1,7 +1,3 @@
-//
-// Created by Admin on 22-10-19.
-//
-
 #ifndef GR66_RECEIVE_H
 #define GR66_RECEIVE_H
 #include "socket.h"

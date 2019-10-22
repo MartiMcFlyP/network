@@ -84,14 +84,14 @@ void receive_data(char* hostname, int port, int N, char* format){
     }
 
     //ouverture du fichier de sortie
-	char file[sizeof(format)];
- 	sprintf(file,format,0);
-	int fd = open((const char *)file, O_WRONLY | O_CREAT | O_TRUNC , S_IRWXU);
-	if(fd == -1){
-		fprintf(stderr, "An occur failed while opening fd.");
-		return;
-	}
-    
+    char file[sizeof(format)];
+    sprintf(file,format,0);
+    int fd = open((const char *)file, O_WRONLY | O_CREAT | O_TRUNC , S_IRWXU);
+    if(fd == -1){
+        fprintf(stderr, "An occur failed while opening fd.");
+        return;
+    }
+
     fd_set readset;
 
     FD_ZERO(&readset);
@@ -147,7 +147,7 @@ void receive_data(char* hostname, int port, int N, char* format){
                             //a bien été reçu
                             while (buffer_len[index] != -1){
                                 //Ecriture le pyaload des packets dans le fichier
-                                if(write(&fd,buffer_payload[index],buffer_len[index]) < 0)
+                                if(write(fd,buffer_payload[index],buffer_len[index]) < 0)
                                 {
                                     fprintf(stderr,"ERROR WRITING PACKET");
                                 }
@@ -183,7 +183,7 @@ void receive_data(char* hostname, int port, int N, char* format){
 
 
     close(socket_fd);
-    close(&readset);
+    close(fd);
     pkt_del(pkt_ack);
     pkt_del(pkt_rcv);
 }
