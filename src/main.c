@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
     int opt;
     int port;
     int N;
-    char *format;
+    char *format    ;
     char *hostname;
     while ((opt = getopt(argc, argv, "o:m:")) != -1) {
         switch (opt) {
@@ -39,6 +39,6 @@ int main(int argc, char **argv) {
     }
     hostname = argv[optind];
     port = atoi(argv[optind+1]);
-    receive(hostname,port,N);
+    receive_data(hostname,port,N);
     exit(EXIT_SUCCESS);
 }
