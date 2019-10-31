@@ -23,9 +23,4 @@ int create_socket(struct sockaddr_in6 *source_addr, int src_port, struct sockadd
 int sockfd;
 
 
-int wait_for_client(int sfd);
-struct sockaddr_in6 caller_addr;
-char buf[1024];
-
-
 #endif //SRC_SOCKET_H
