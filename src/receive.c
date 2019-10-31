@@ -1,4 +1,6 @@
-#include "socket.h"
+
+  
+  #include "socket.h"
 #include "packet_implement.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -26,41 +28,10 @@
 
 /*A FAIRE ! 
 selective repeat
-
+acq seq
 calcul CRC
 commentaires
 */
-
-
-
-
-
-
-
-char *buffer_payload[MAX_PAYLOAD_SIZE]; //Permet de stocker les payload recu
-int buffer_len[MAX_WINDOW_SIZE]; //Permet de stocker la taille des payload recu
-
-
-void add_buffer(int index, int seq_rcv, int seq_exp, pkt_t * pkt_rcv, int window){
-    //On regarde si le num de segement recu est compris dans la window   && l  e numéro de segment recu est = ou > que le segment attendu (les numéros de segments inférieurs sont inutiles)
-    if ((seq_rcv <= seq_exp + window-1 && seq_rcv >= seq_exp) || (seq_exp + window -1 > 256 && seq_rcv <= (seq_exp+window-1)%256)){
-        //Exemple de cas à gérer :
-        //Le numéro segment attendu est 255 et on recoit 1, ne passe pas dans notre première condition mais le packet recu est pourtant correct.
-        //On regarde alors si le numéro de segment attendu + la window-1 dépasse 256   &&   si le numéro de segment recu est compris dans la window
-        // le segment peut etre contenu dans le buffer
-
-        //On ajoute 256 pour ne pas fausser le calcul d'index du tableau
-        if(seq_rcv < seq_exp) {
-            seq_rcv +=  256;
-        }
-        //Calcul de l'indice
-        //l'ajout de (seq_rcv - seq_exp) permet de placer le payload au bon indice du payload (cas ou le numérod segment recu > le numéro de segment attendu)
-        int real_ind =(index + (seq_rcv - seq_exp))%window;
-        //remplissage du buffer
-        buffer_len[real_ind] = pkt_get_length(pkt_rcv);
-        buffer_payload[real_ind] = (char *)pkt_get_payload(pkt_rcv);
-    }
-}
 
 
 
@@ -125,9 +96,6 @@ int send_ack(pkt_t *pkt_ack, int seqnum, int socket_fd, int ack, uint32_t time_d
 }
 
 
-
-
-
 void receiver(char* hostname, int port, int N, char* format){
 
     struct sockaddr_in6 addr;
@@ -151,11 +119,6 @@ void receiver(char* hostname, int port, int N, char* format){
     pkt_t* pkt_rcv;
     //Permet d'envoyer des ACK/NACK
     pkt_t* pkt_ack;
-
-
-    int window = 10;
-    int index = 0; //Utilisé pour gerer les indice du buffer
-    int seq_attendue = 0; //Numéro de segment attendu
 
     memset(buffer_len,-1,MAX_WINDOW_SIZE);
     char packet_encoded[528];
@@ -188,10 +151,17 @@ void receiver(char* hostname, int port, int N, char* format){
     fd_set readset;     //liste de fd
     
 
+    int window = 10;
+    int index = 0; //Utilisé pour gerer les indice du buffer
     int listen_socket = listen(socket_fd,N);
     int activity;
     int sender_socket [N];
     struct sockaddr_in client_address;
+    int seq_attendue[N]; //seq attendue
+
+    char **buffer_payload[N][MAX_PAYLOAD_SIZE]; //Permet de stocker les payload recu
+    int *buffer_len[N][MAX_WINDOW_SIZE]; //Permet de stocker la taille des payload recu
+    int *buffer_seq[N][MAX_WINDOW_SIZE]; // Permet de stocker les num de seq attendues
 
     while (1) {
 
@@ -237,11 +207,10 @@ void receiver(char* hostname, int port, int N, char* format){
                             if(send_ack(pkt_ack,seq_rcv,socket_fd, PTYPE_NACK, pkt_get_timestamp(pkt_rcv),window) < 0){
                                 fprintf(stderr,"Error sending nack");
                             }
-
                         }
 
                         else{
-                
+                            
                             int leng = pkt_get_length(pkt_rcv);
 
                             if(leng == 0)
@@ -250,31 +219,40 @@ void receiver(char* hostname, int port, int N, char* format){
                                 if(close(sender_socket[i]) == -1){
                                     fprintf(stderr,"Erreur fermeture socket");
                                 }
+                                //tt remettre à 0
                             }
 
                             else
                             {
-                                add_buffer(index, seq_rcv, seq_attendue, pkt_rcv, window);
-                                
-                                while (buffer_len[index] != -1){
-                                    if(write(fd,buffer_payload[index],buffer_len[index]) < 0)
-                                    {
-                                        fprintf(stderr,"erreur écriture");
+                                if(seq_rcv < (seq_attendue[i] + window)){
+                                    if(seq_attendue[i] == seq_rcv){
+                                        write(fd,pkt_get_payload(pkt_rcv), pkt_get_length(pkt_rcv));
+                                        if(send_ack(pkt_ack,seq_rcv,socket_fd, PTYPE_NACK, pkt_get_timestamp(pkt_rcv),window) < 0){
+                                            fprintf(stderr,"Error sending nack");
+                                        }
+                                        seq_attendue[i] ++;
+                                        int j;
+                                        for(j = 0; j < 2*window; j ++){
+                                            if(buffer_seq[i][j%window] == seq_attendue[i]){
+                                                write(fd,buffer_payload[i][j%window],buffer_len[i][j%window]);
+                                                if(send_ack(pkt_ack,seq_rcv,socket_fd, PTYPE_NACK, pkt_get_timestamp(pkt_rcv),window) < 0){
+                                                    fprintf(stderr,"Error sending nack");
+                                                }
+                                                buffer_payload[i][j%window] = NULL;
+                                                buffer_len[i][j%window] = -1;
+                                                buffer_seq[i][j%window] = -1;
+                                                seq_attendue[i] ++;
+                                            }
+                                        }
                                     }
-                                    buffer_payload[index] = (char *)NULL;
-                                    buffer_len[index] = -1;
-                                    //On passe à l'index suivant (l'index ne peut jamais dépasser la window size).
-                                    index = (index+1)%window;
-                                    //Le numéro de séquence attendu est incrémenté
-                                    seq_attendue = (seq_attendue+1)%256;
-                                }
-                                if(send_ack(pkt_ack,(seq_attendue)-1,socket_fd, PTYPE_ACK, pkt_get_timestamp(pkt_rcv), window) < 0)
-                                {
-                                    fprintf(stderr,"Error sending ack\n");
-                                }
 
+                                    else{
+                                        buffer_len[i][(seq_rcv%window)] = pkt_get_length(pkt_rcv);
+                                        buffer_payload[i][(seq_rcv%window)] = pkt_get_payload(pkt_rcv);
+                                        buffer_seq[i][seq_rcv%window] = pkt_get_seqnum(pkt_rcv);
+                                    }
+                                }
                             }
-
                         }
                     }
                 }
@@ -286,11 +264,7 @@ void receiver(char* hostname, int port, int N, char* format){
                 }
             }
         }
-    }
-
-
-
-   
+    }  
 }
 
 
@@ -328,10 +302,6 @@ int main(int argc, char **argv) {
     receiver(hostname, port, N, format);
     exit(EXIT_SUCCESS);
 }
-
-
-
-
 
 
 
