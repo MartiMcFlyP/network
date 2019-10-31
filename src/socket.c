@@ -59,20 +59,3 @@ int create_socket(struct sockaddr_in6 *source_addr, int src_port, struct sockadd
 
     return sockfd;
 }
-
-
-int wait_for_client(int sfd){
-    struct sockaddr_in6 caller_addr;
-    socklen_t len = sizeof(struct sockaddr_in6);
-    memset(&caller_addr,0,len);
-    char buf[1024];
-    if (recvfrom(sfd, buf, sizeof(buf), 0, (struct sockaddr *)&caller_addr, &len) == -1){//vérifier le bon fonctionnement
-        perror("error while receiving");
-        return -1;
-    }
-    if(connect(sfd, (struct sockaddr *)&caller_addr, len) == -1){
-        perror("error while connecting");
-        return -1;
-    }
-    return 0;
-}
